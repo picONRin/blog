@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人小站</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0; 
+            padding: 0;
+        }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f2f2f2;
+            color: #333;
+            padding-bottom: 100px;
+        }
+        .banner {
+            position: relative;
+            width: 100%;
+            max-width: 100vw;
+        }
+        .banner img.background {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .avatar {
+            width: 120px; 
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid white;
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background-color: white;
+        }
+        .profile {
+            margin-top: 70px;
+            padding: 0 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+        p {
+            color: #666;
+            font-size: 16px;
+        }
+        .sections {
+            max-width: 1200px;
+            margin: 40px auto 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding: 0 10px;
+        }
+        .section {
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .section h2 {
+            font-size: 20px;
+            color: #222;
+            margin-bottom: 10px;
+        }
+        .section p {
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 核心：画作展示区 - 强制一行5个 */
+        .gallery {
+            margin-top: 15px;
+            display: grid; /* 使用grid布局确保严格对齐 */
+            grid-template-columns: repeat(5, 1fr); /* 固定5列 */
+            gap: 15px; /* 列与列之间的间距 */
+            width: 100%;
+        }
+        /* 年份标题单独占满一行 */
+        .year-section {
+            grid-column: 1 / -1; /* 从第1列到最后一列 */
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .year-section h3 {
+            font-size: 18px;
+            color: #333;
+            text-align: left;
+        }
+        /* 画作项样式 */
+        .gallery-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 5px;
+        }
+        .gallery-item img {
+            width: 100%;
+            max-width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .gallery-item img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .caption {
+            font-size: 12px;
+            color: #777;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            width: 100%;
+        }
+        .gallery-item div:not(.caption) {
+            font-size: 13px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        /* 全屏预览层（修改后：增加翻页按钮和图片信息） */
+        #previewOverlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: default; /* 取消整体点击关闭，改用关闭按钮 */
+        }
+        #previewOverlay img {
+            max-width: 90%;
+            max-height: 80%;
+            border-radius: 8px;
+        }
+        /* 预览层翻页按钮 */
+        #prevBtn, #nextBtn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 50%;
+            display: none; /* 默认隐藏，有多个图片时显示 */
+        }
+        #prevBtn {
+            left: 20px;
+        }
+        #nextBtn {
+            right: 20px;
+        }
+        /* 预览层关闭按钮 */
+        #closeBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        /* 预览层图片信息 */
+        #imageInfo {
+            position: absolute;
+            bottom: 20px;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        /* 联系方式 */
+        .contact-section {
+            max-width: 1200px;
+            margin: 40px auto;
+            display: flex;
+            gap: 20px 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 10px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            color: #333;
+            gap: 8px;
+        }
+        .contact-item img {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* PDF查看器样式 */
+        #pdfViewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .pdf-container {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+        .pdf-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+        .pdf-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        .pdf-header button {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #pdfFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 小屏幕适配：自动减少列数但保持均匀 */
+        @media (max-width: 900px) {
+            .gallery {
+                grid-template-columns: repeat(4, 1fr); /* 4列 */
+            }
+        }
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(3, 1fr); /* 3列 */
+            }
+        }
+        @media (max-width: 500px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr); /* 2列 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部横幅 -->
+    <div class="banner">
+        <img class="background" src="images/2021.8.6.png" alt="背景" />
+        <img class="avatar" src="images/icon (2).png" alt="头像" />
+    </div>
+
+    <!-- 个人简介 -->
+    <div class="profile">
+        <h1>你好，我是picONRin</h1>
+        <p>欢迎来到我的个人小站(｡・ω・｡)</p>
+    </div>
+
+    <!-- 内容模块区 -->
+    <div class="sections">
+<!-- 语模块 -->
+<div class="section" id="yu" onclick="toggleYuContent()">
+    <h2>语</h2>
+    <p>语文学习相关讨论 (点击展开/收起)</p>
+    
+    <!-- 论文查重系统区域 -->
+    <div class="check-system" id="yuContent" style="display: none; margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+        <!-- 新增：reading_reward_system 下载区域 -->
+        <h3 style="color: #333; margin-bottom: 15px; text-align: left;">阅读奖励系统 (reading_reward_system)</h3>
+        
+        <!-- 系统介绍 -->
+        <div style="margin-bottom: 20px; text-align: left;">
+            <p style="color: #666; line-height: 1.6;">
+                本项目由本人主导并独立开发，好友参与试错与建议提出，旨在通过奖励机制激励学生主动阅读。<br>
+                详细功能说明、使用方法及配置规则请查看压缩包内的 <code>readme.txt</code> 文件。
+            </p>
+        </div>
+
+        <!-- 下载区域 -->
+        <div class="download-section" style="text-align: center; padding: 20px; border: 2px dashed #ddd; border-radius: 8px; margin-bottom: 40px;">
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 40px; color: #667eea;">📖</div>
+            </div>
+            
+            <h4 style="color: #333; margin-bottom: 10px;">下载阅读奖励系统</h4>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                版本: 1.1.0 | 大小: 约3.04 MB | 更新日期: 2026-01-05
+            </p>
+            
+            <!-- 下载按钮 -->
+            <button onclick="downloadReadingRewardSystem()" 
+                    style="background: linear-gradient(135deg, #666eea 0%, #764ba2 100%); 
+                           color: white; border: none; padding: 12px 25px; border-radius: 25px; 
+                           cursor: pointer; font-size: 16px; transition: all 0.3s ease;">
+                📥 下载阅读奖励系统 1.1.0
+            </button>
+            
+            <!-- 系统要求 -->
+            <div style="margin-top: 15px; font-size: 12px; color: #888;">
+                <p>系统要求: Python 3.8+ | Windows 10+/macOS 10.15+ | 详细说明见readme.txt</p>
+            </div>
+        </div>
+
+        <!-- 原有：文学类论文查重系统 -->
+        <h3 style="color: #333; margin-bottom: 15px; text-align: left;">文学类论文查重系统</h3>
+        
+        <!-- 系统介绍 -->
+        <div style="margin-bottom: 20px; text-align: left;">
+            <p style="color: #666; line-height: 1.6;">
+                专为语文学习和文学研究设计的查重工具，<br>
+                帮助您检测论文原创性，提升学术写作质量，<br>
+                适合中文系学生和文学研究者使用。
+            </p>
+        </div>
+
+        <!-- 功能特点 -->
+        <div style="margin-bottom: 20px; text-align: left;">
+            <h4 style="color: #444; margin-bottom: 10px;">系统特点：</h4>
+            <ul style="color: #666; padding-left: 20px; line-height: 1.6;">
+                <li>精准识别文学类论文相似度</li>
+                <li>支持古诗文研究、现代文学研究等方向</li>
+            </ul>
+        </div>
+
+        <!-- 下载区域 -->
+        <div class="download-section" style="text-align: center; padding: 20px; border: 2px dashed #ddd; border-radius: 8px;">
+            <div style="margin-bottom: 15px;">
+                <div style="font-size: 40px; color: #667eea;">📚</div>
+            </div>
+            
+            <h4 style="color: #333; margin-bottom: 10px;">下载文学类论文查重系统</h4>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                版本: 终版 v3.0 | 大小: 约35 KB | 更新日期: 2025-09-14
+            </p>
+            
+            <!-- 下载按钮 -->
+            <button onclick="downloadCheckSystem()" 
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                           color: white; border: none; padding: 12px 25px; border-radius: 25px; 
+                           cursor: pointer; font-size: 16px; transition: all 0.3s ease;">
+                📥 下载查重系统终版
+            </button>
+            
+            <!-- 系统要求 -->
+            <div style="margin-top: 15px; font-size: 12px; color: #888;">
+                <p>系统要求: Python 3.8+ | Windows 10+/macOS 10.15+</p>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 6px; border-left: 4px solid #667eea; text-align: left;">
+            <h4 style="color: #444; margin-bottom: 10px;">使用说明：</h4>
+            <ol style="color: #666; padding-left: 20px; line-height: 1.6;">
+                <li>下载并解压ZIP文件</li>
+                <li>点击运行: <code>查重系统终版.py</code></li>
+                <li>选择要检测的基准论文与待比对论文</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- 文模块 -->
+        <div class="section" id="wen">
+            <h2>文</h2>
+            <p>同人文与写作心得分享</p>
+        </div>
+
+<!-- 画模块 -->
+        <div class="section" id="hua" onclick="toggleGallery()">
+            <h2>画</h2>
+            <p>绘画创作展示 (点击展开/收起)</p>
+            <div class="gallery" id="gallery" style="display:none;">
+                <!-- 2021年画作 -->
+                <div class="year-section" id="year-2021">
+                    <h3>2021</h3>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/1.png" alt="画作1" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-06-29</div>
+                    <div>智趣羊学堂的水手服懒和530的小懒懒^-^</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/2.png" alt="画作2" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-06-29</div>
+                    <div>两个oc 右边黑发紫瞳pien脸是我的 左边是亲友的</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/3.png" alt="画作3" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-01</div>
+                    <div>在照片上画的kaf酱 感觉那时候画的有点胖了……</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/4.png" alt="画作4" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-02</div>
+                    <div>偷拍老婆睡觉</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/4.2.png" alt="画作4" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-02</div>
+                    <div>被发现了！</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/5.png" alt="画作5" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-05</div>
+                    <div>那年生日梦到的内容 也挺黑深残的 等待考古……</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/5.2.png" alt="画作5" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-05</div>
+                    <div>顺便一说背景是网上直接找的图片 类似于Winxp的默认背景（。</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/6.png" alt="画作6" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-07</div>
+                    <div>小时候不懂事嬷的喜猫猫 其实我觉得反转过来是懒攻（没见过懒儿黑化）</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/7.png" alt="画作7" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-11</div>
+                    <div>喜懒摸鱼若干</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/8.png" alt="画作8" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-12</div>
+                    <div>应援中考考上鱼糕的 谐音纯属巧合（。</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/9.png" alt="画作9" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-26</div>
+                    <div>文艺复兴的《八月》系列</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/10.jpg" alt="画作10" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-07-30</div>
+                    <div>这个也有梦的原型，说出来会掉马不说了</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/11.jpg" alt="画作11" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-08-06</div>
+                    <div>后疫情时代妄想的春日之旅 也是本小站头图 寓意很好一直很喜欢</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/12.png" alt="画作12" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-08-07</div>
+                    <div>偷拍那些事（灵感来源说了也会掉马，不说了）</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/13.jpg" alt="画作13" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-08-17</div>
+                    <div>当时特别沉迷病娇米 这个眼睛简直了。。。</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/14.png" alt="画作14" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-08-25</div>
+                    <div>产品暑假妄想 那时候上色好油腻……</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/15.png" alt="画作15" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-02-02</div>
+                    <div>沉迷化学的产物 因为不记得传 11月才补的档</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2021/16.png" alt="画作16" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-08-07</div>
+                    <div>实景融合照片第一弹 立秋</div>
+                 </div>
+                 <div class="gallery-item">
+                    <img src="画/2021/17.png" alt="画作17" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2021-08-??</div>
+                    <div>实景融合照片第二弹 不记得什么时候了 歌词好像是《夏空与走马灯》里面的</div>
+                </div>
+
+
+                <!-- 2022年画作 -->
+                <div class="year-section" id="year-2022">
+                    <h3>2022</h3>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/1.png" alt="画作1" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-01-30</div>
+                    <div>2021年暑假的一个病娇点子漫画化 其实袋子里装的是尸体 如果考古结果出来了会发发~</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/2.png" alt="画作2" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-02-12</div>
+                    <div>给朋友的生日头像第一年<br>刻意迎合了她喜欢的hp</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/3.png" alt="画作3" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-05-01</div>
+                    <div>第一次画曲绘 是mafumafu翻唱yorushika的《我放弃了音乐》<br>那时候还很爱这两个音乐人/团体 现在无感了</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/4.png" alt="画作4" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-05-03</div>
+                    <div>看电视演出 so酱唱到《心做し》的时候 突然有了上去抱抱他的冲动 不知道为什么就变成亲了<br>(灬ºωº灬)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/4.2.png" alt="画作4" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-05-03</div>
+                    <div>s脸红m偷笑版</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/5.png" alt="画作5" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-07-09</div>
+                    <div>描改了《Lower》的水仙so酱</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/5.2.png" alt="画作5" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-07-09</div>
+                    <div>描改了《Lower》的水仙so酱</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/6.png" alt="画作6" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-07-17</div>
+                    <div>感情出了bug干脆原地结婚吧（有人评论说把头发看成拉丝的 现在一看该死为什么我不画成拉丝呢？这里头发没那么长</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/6.2.png" alt="画作6" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-07-17</div>
+                    <div>感情出了bug干脆原地结婚吧（套子版）</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/7.png" alt="画作7" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-08-05</div>
+                    <div>七夕打pjsk七夕活动 做了个玩偶装play的梦</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/8.png" alt="画作8" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-08-10</div>
+                    <div>夏天画ms圣诞节暧昧图几个意思？</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/9.jpg" alt="画作9" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-08-18</div>
+                    <div>憋了一暑假的周年图 怎么最后变成2022感谢图了。。。</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2022/10.png" alt="画作10" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2022-08-26</div>
+                    <div>涂鸦合集 还记得当时一边熬夜看so酱的塞尔达一边涂的 完全不顾第二天要去学校了</div>
+                </div>
+
+                <!-- 2023年画作 -->
+                <div class="year-section" id="year-2023">
+                    <h3>2023</h3>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2023/1.jpg" alt="画作1" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2023-02-04</div>
+                    <div>原本计划出一个西蛋勇者的本 但不了了之 嬷一嬷还是可以的（鼻血）</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2023/2.jpg" alt="画作2" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2023-05-01</div>
+                    <div>给喜欢游戏的朋友的头像废稿<br>以前的画风好蠢萌眼睛好小（。</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2023/3.jpg" alt="画作3" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2023-07-30</div>
+                    <div>最近给自己捏的设定。。。没错两年前 具体设定之后会考考古发出来</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2023/4.png" alt="画作3" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2023-08-01</div>
+                    <div>给大人的生日头像~超好嬷（划掉）的主唱一枚<br>（明明是键盘手却把人家画成主唱！→我不会画；；（对手指</div>
+                </div>
+           
+                <!-- 2024年画作 -->
+                <div class="year-section" id="year-2024">
+                    <h3>2024</h3>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/1.png" alt="画作1" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-02-12</div>
+                    <div>给朋友的生日头像<br>粉嫩嫩的小羊^-^</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/1(2).png" alt="画作1(2)" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-02-12</div>
+                    <div>发过去的版本<br>背景加了花作装饰</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/2.png" alt="画作2" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-06-16</div>
+                    <div>为了有个人特色 给自己画了X头像 也是主页头像</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/3.jpg" alt="画作3" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-07-30</div>
+                    <div>7周年纪念贺图 忙着填志愿只画了家产QQ人对不起QAQ</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/3.2.png" alt="画作3.2" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-07-30</div>
+                    <div>改图不就是推倒(ﾉ*>ω<)ﾉ</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/4.png" alt="画作4" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-08-01</div>
+                    <div>给大人的18岁生贺 被本人做头图啦///</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2024/5.png" alt="画作5" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-08-??</div>
+                    <div>幻想中的I Sleep Well漫画版 不记得确切日期了QAQ</div>
+                </div>
+
+                <!-- 2025年画作 -->
+                <div class="year-section" id="year-2025">
+                    <h3>2025</h3>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/00.png" alt="画作00" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2024-10-13</div>
+                    <div>第一次使用数位板<br>涂色非常稚嫩</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/0.png" alt="画作0" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-02-10</div>
+                    <div>给朋友的生日头像<br>同样非常非常稚嫩</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/01.png" alt="画作01" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-01-17</div>
+                    <div>第一次板绘家产₍₍ ᕕ(´ ω`)ᕗ⁾⁾<br>其实我家主人公是kiss狂魔吧嗯</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/02.jpg" alt="画作02" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-01-20</div>
+                    <div>磕上家产的两种感受(´ ; ω ; `)<br>一是双向奔赴，二是双向救赎！</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/03.png" alt="画作03" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-01-22</div>
+                    <div>给家产画的情人节限定二月月历 略显简陋。之后可能会印实体台历</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/04.png" alt="画作04" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-01-27</div>
+                    <div>说真的老婆你这套<br>也太色情了吧(つд⊂)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/05.png" alt="画作05" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-01-28</div>
+                    <div>蓝白配色的两套<br>正剧中都无（嗯。</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/06.png" alt="画作06" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-02-02</div>
+                    <div>个人认为初离雪国的みゅ和失忆みゅ都会不约而同地把ブン当作自己的救世主 而ブン恰恰是因为みゅ的支撑 才相信自己是勇者<br>就是这样的双向救赎 家产好真<br>(〒︿〒)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/07.jpg" alt="画作07" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-02-08</div>
+                    <div>初衷是想画暧昧的氛围 就这么简单(っ´ω`c) 渔村庆功宴上受人鱼悲剧刺激 大胆拥吻的年轻人们</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/08.jpg" alt="画作08" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-02-14</div>
+                    <div>*广播剧延伸 偷偷把后台灯光交给约奇 去和女装老婆亲亲热热的ブン<br>(灬ºωº灬)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/09.jpg" alt="画作09" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-04-13</div>
+                    <div>像同人本封面就对了 这是我的小说封面十万字纪念(,,・ω・,,)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/10.jpg" alt="画作10" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-04-20</div>
+                    <div>实在不懂画就弃了<br>谁能教我透视QAQ</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/11.jpg" alt="画作11" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-05-02</div>
+                    <div>对视 不愿把焦虑传染给爱人<br>相顾无言 惟有泪千行的小狗</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/12.png" alt="画作12" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-05-18</div>
+                    <div>爽图</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/13.png" alt="画作13" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-05-19</div>
+                    <div>小狗想打野战怎么办<br>只有满足他了</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/14.jpg" alt="画作14" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-05-25</div>
+                    <div>跑完马拉松后适合一些轻松摸鱼<br>终于可以继续搞家产的救赎感<br>(〒︿〒)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/15.png" alt="画作15" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-06-01</div>
+                    <div>结婚之后依然很受欢迎的<br>得意的小勇者（其实希望老婆吃醋</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/16.png" alt="画作16" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-06-01</div>
+                    <div>可能有点雷人（并非强制爱<br>是治疗老婆牺牲主义的情趣惩罚<br>(灬ºωº灬)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/17.jpg" alt="画作17" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-07-05</div>
+                    <div>给自己定制的桌垫柄图<br>是女装家产<br>(,,・ω・,,)</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/18.jpg" alt="画作18" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-07-12</div>
+                    <div>假面武道会的妄想<br>要是家产在一组就好了——</div>
+                </div> 
+                <div class="gallery-item">
+                    <img src="画/2025/19.png" alt="画作19" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-07-19</div>
+                    <div>摸鱼的kana<br>发型很可爱但脸被我画圆润了QAQ</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/20.png" alt="画作20" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-08-15</div>
+                    <div>刚开始打8限的一些心情<br>不是勇者太弱是boss太强qwq</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/21.png" alt="画作21" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-08-21</div>
+                    <div>还是8限过魔王 打了近20次……<br>勇者美美吃老婆软饭（好喜欢萌萌的野兽感，一副要咬人的样子）</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="画/2025/22.png" alt="画作22" onclick="showPreview(this.src, this.parentElement)" />
+                    <div class="caption">创作于: 2025-08-28</div>
+                    <div>希望卡娜可以永远自信像太阳一样幸福地活下去~</div>
+               </div>
+                    <div class="gallery-item">
+                          <img src="画/2025/23.png" alt="画作23" onclick="showPreview(this.src, this.parentElement)" />
+                          <div class="caption">创作于: 2025-09-08</div>
+                          <div>实在忍不住了就提前画了结婚纪念日贺图……啊啊啊给我去幸福吧家产!!!</div>
+                    </div>
+                    <div class="gallery-item">
+                           <img src="画/2025/24.png" alt="画作24" onclick="showPreview(this.src, this.parentElement)" />
+                           <div class="caption">创作于: 2025-09-23</div>
+                           <div>性压抑产物。短裤黑丝生来就是给人扒掉的。</div>
+                           </div>
+                           <div class="gallery-item">
+                           <img src="画/2025/25.jpg" alt="画作25" onclick="showPreview(this.src, this.parentElement)" />
+                           <div class="caption">创作于: 2025-10-31</div>
+                           <div>万圣节当然要吃点好的~</div>
+                          </div>
+                  </div>
+          </div>
+
+
+        <!-- 音模块 -->
+        <div class="section" id="yin">
+            <h2>音</h2>
+            <p>音频作品与音乐分享</p>
+        </div>
+
+<!-- 汉模块 -->
+<div class="section" id="shi" onclick="toggleShiContent()">
+    <h2>汉</h2>
+    <p>汉化内容与心得展示 (点击展开/收起)</p>
+    
+    <div class="gallery" id="shiContent" style="display: none; margin-top: 15px;">
+        <div class="year-section" id="hanhua-2025">
+            <h3>2025</h3>
+        </div>
+        
+        <!-- 1. 料理店轶事 -->
+        <div class="gallery-item">
+            <div style="width: 100%; max-width: 150px; aspect-ratio: 1/1.414; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); background: #f5f5f5;">
+                <img src="汉/料理店轶事.jpg"
+                     alt="料理店轶事 封面" 
+                     style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; cursor: pointer;"
+                     onclick="openPdfReader('汉/料理店轶事.pdf', '料理店轶事')">
+            </div>
+            <div class="caption">汉化于: 2025-09-01</div>
+            <div>料理店轶事<br><span style="font-size: 11px; color: #777;">170页 · 点击封面查看</span></div>
+        </div>
+
+        <!-- 2. 小短篇合集漫画 -->
+        <div class="gallery-item">
+            <div style="width: 100%; max-width: 150px; aspect-ratio: 1/1.414; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); background: #f5f5f5;">
+                <img src="汉/小短篇合集（2018）/封面.jpg"
+                     alt="小短篇合集 封面" 
+                     style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; cursor: pointer;"
+                     onclick="openComicViewer('小短篇合集（2018）', [
+                         '汉/小短篇合集（2018）/封面.jpg',
+                         '汉/小短篇合集（2018）/目录.jpg',
+                         '汉/小短篇合集（2018）/01.png',
+                         '汉/小短篇合集（2018）/02.png',
+                         '汉/小短篇合集（2018）/03.png',
+                         '汉/小短篇合集（2018）/04.png',
+                         '汉/小短篇合集（2018）/05.png',
+                         '汉/小短篇合集（2018）/06.png',
+                         '汉/小短篇合集（2018）/07.png',
+                         '汉/小短篇合集（2018）/08.png',
+                         '汉/小短篇合集（2018）/09.png',
+                         '汉/小短篇合集（2018）/10.png',
+                         '汉/小短篇合集（2018）/11.png',
+                         '汉/小短篇合集（2018）/12.png',
+                         '汉/小短篇合集（2018）/13.png',
+                         '汉/小短篇合集（2018）/14.jpg',
+                         '汉/小短篇合集（2018）/15.png',
+                         '汉/小短篇合集（2018）/16.png',
+                         '汉/小短篇合集（2018）/17.png',
+                         '汉/小短篇合集（2018）/18.png',
+                         '汉/小短篇合集（2018）/19.png',
+                         '汉/小短篇合集（2018）/20.png',
+                         '汉/小短篇合集（2018）/21.png',
+                         '汉/小短篇合集（2018）/22.png',
+                         '汉/小短篇合集（2018）/23.png',
+                         '汉/小短篇合集（2018）/24.png',
+                         '汉/小短篇合集（2018）/25.png',
+                         '汉/小短篇合集（2018）/26.png',
+                         '汉/小短篇合集（2018）/27.jpg',
+                         '汉/小短篇合集（2018）/28.png',
+                         '汉/小短篇合集（2018）/29.png',
+                         '汉/小短篇合集（2018）/30.png',
+                         '汉/小短篇合集（2018）/31.png',
+                         '汉/小短篇合集（2018）/32.png',
+                         '汉/小短篇合集（2018）/33.png',
+                         '汉/小短篇合集（2018）/34.png',
+                         '汉/小短篇合集（2018）/35.png',
+                         '汉/小短篇合集（2018）/36.jpg',
+                         '汉/小短篇合集（2018）/37.png',
+                         '汉/小短篇合集（2018）/38.png',
+                         '汉/小短篇合集（2018）/39.jpg',
+                         '汉/小短篇合集（2018）/40.jpg',
+                         '汉/小短篇合集（2018）/41.jpg',
+                         '汉/小短篇合集（2018）/42.jpg',
+                         '汉/小短篇合集（2018）/封底.jpg'
+                     ])">
+            </div>
+            <div class="caption">汉化于: 2025-09-05</div>
+            <div>小短篇合集<br><span style="font-size: 11px; color: #777;">A5比例 · 45页 · 点击查看</span></div>
+        </div>
+        
+        <!-- 3. 幽谷龙胆 -->
+        <div class="gallery-item">
+            <div style="width: 100%; max-width: 150px; aspect-ratio: 1/1.414; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); background: #f5f5f5;">
+                <img src="汉/幽谷龙胆.png" 
+                     alt="幽谷龙胆 封面" 
+                     style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; cursor: pointer;"
+                     onclick="openPdfReader('汉/幽谷龙胆.pdf', '幽谷龙胆')">
+            </div>
+            <div class="caption">汉化于: 2026-01-30</div>
+            <div>幽谷龙胆<br><span style="font-size: 11px; color: #777;">120页 · 点击封面查看</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- 补充：漫画查看器核心函数（含预加载，完整无重复） -->
+<script>
+// 1. 漫画查看器全局变量（统一定义，无重复）
+let currentComicPages = [];       // 存储当前漫画的所有页面路径（数组）
+let currentComicIndex = 0;        // 当前查看的页码索引（从0开始）
+let preloadedComicImages = {};    // 预加载缓存：key=页面路径，value=Image对象
+const PRELOAD_PAGE_COUNT = 2;     // 每次预加载“当前页后2页”（可调整）
+
+// 2. 预加载单个漫画页面（内部函数，不直接调用）
+function preloadComicPage(pagePath) {
+    // 跳过已预加载的页面，避免重复请求
+    if (preloadedComicImages[pagePath]) return;
+
+    // 创建Image对象，后台加载图片（不影响当前页面）
+    const img = new Image();
+    img.src = pagePath;
+
+    // 加载成功：存入缓存
+    img.onload = function () {
+        preloadedComicImages[pagePath] = img;
+        console.log(`已预加载：${pagePath}`); // 调试用，可删除
+    };
+
+    // 加载失败：容错提示（不卡住翻页）
+    img.onerror = function () {
+        console.error(`加载失败：${pagePath}（可能路径错误）`);
+    };
+}
+
+// 3. 批量预加载“当前页后的N页”（核心预加载逻辑）
+function preloadNextComicPages() {
+    const totalPages = currentComicPages.length;
+    if (totalPages === 0) return; // 无页面时跳过
+
+    // 计算预加载范围：当前页+1 到 当前页+PRELOAD_PAGE_COUNT（不超出总页数）
+    const startIndex = currentComicIndex + 1;
+    const endIndex = Math.min(startIndex + PRELOAD_PAGE_COUNT - 1, totalPages - 1);
+
+    // 循环预加载范围内的页面
+    for (let i = startIndex; i <= endIndex; i++) {
+        preloadComicPage(currentComicPages[i]);
+    }
+}
+
+// 4. 打开漫画查看器（点击漫画封面时调用）
+function openComicViewer(title, pages) {
+    const comicViewer = document.getElementById('comicViewer');
+    const comicTitle = document.getElementById('comicTitle');
+    const comicImage = document.getElementById('comicImage');
+    const comicPageInfo = document.getElementById('comicPageInfo');
+
+    // 初始化数据（清空上一次漫画的缓存和索引）
+    currentComicPages = pages;    // 传入当前漫画的所有页面路径
+    currentComicIndex = 0;        // 默认从第1页（索引0）开始
+    preloadedComicImages = {};    // 清空上一次漫画的预加载缓存
+
+    // 更新UI显示
+    comicTitle.textContent = title; // 显示漫画标题
+    comicImage.src = currentComicPages[currentComicIndex]; // 显示当前页
+    comicPageInfo.textContent = `第 ${currentComicIndex + 1} 页 / 共 ${currentComicPages.length} 页`; // 页码信息
+
+    // 关键：初始化时预加载后面2页
+    preloadNextComicPages();
+
+    // 显示弹窗+禁止页面滚动
+    comicViewer.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// 5. 关闭漫画查看器
+function closeComicViewer() {
+    const comicViewer = document.getElementById('comicViewer');
+    comicViewer.style.display = 'none';
+    document.body.style.overflow = ''; // 恢复页面滚动
+
+    // 重置数据（避免下次打开时残留）
+    currentComicPages = [];
+    currentComicIndex = 0;
+    preloadedComicImages = {};
+}
+
+// 6. 上一页（点击←按钮或左箭头键）
+function prevComicPage() {
+    if (currentComicIndex <= 0) return; // 已到第一页，无法再上翻
+
+    // 切换到上一页，并预加载新当前页的后面2页
+    currentComicIndex--;
+    updateComicPage();
+    preloadNextComicPages();
+}
+
+// 7. 下一页（点击→按钮或右箭头键）
+function nextComicPage() {
+    const totalPages = currentComicPages.length;
+    if (currentComicIndex >= totalPages - 1) return; // 已到最后一页，无法再下翻
+
+    // 切换到下一页，并预加载新当前页的后面2页
+    currentComicIndex++;
+    updateComicPage();
+    preloadNextComicPages();
+}
+
+// 8. 更新当前漫画页面显示（上/下翻页时调用）
+function updateComicPage() {
+    const comicImage = document.getElementById('comicImage');
+    const comicPageInfo = document.getElementById('comicPageInfo');
+
+    // 优先使用预加载的图片（无延迟），没有则直接加载（兼容极端情况）
+    const targetPagePath = currentComicPages[currentComicIndex];
+    if (preloadedComicImages[targetPagePath]) {
+        comicImage.src = preloadedComicImages[targetPagePath].src;
+    } else {
+        comicImage.src = targetPagePath;
+    }
+
+    // 更新页码信息
+    comicPageInfo.textContent = `第 ${currentComicIndex + 1} 页 / 共 ${currentComicPages.length} 页`;
+}
+</script>
+
+<!-- 下载提示弹窗 -->
+<div id="downloadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 400px;">
+        <h3 style="color: #333; margin-bottom: 15px;">下载提示</h3>
+        <p style="color: #666; margin-bottom: 20px; line-height: 1.5;">
+            您即将下载【文学类论文查重系统】<br>
+            查重系统终版<br>
+            文件大小: 约20 MB
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button onclick="confirmDownload()" 
+                    style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                确认下载
+            </button>
+            <button onclick="closeDownloadModal()" 
+                    style="background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                取消
+            </button>
+        </div>
+    </div>
+</div>
+   
+    <!-- 全屏预览层（修改后：增加翻页按钮、关闭按钮、图片信息） -->
+    <div id="previewOverlay">
+        <button id="prevBtn" onclick="showPrevImage()">←</button>
+        <img id="fullImage" src="" alt="" />
+        <button id="nextBtn" onclick="showNextImage()">→</button>
+        <div id="imageInfo"></div>
+        <button id="closeBtn" onclick="closePreview()">×</button>
+    </div>
+
+    <!-- PDF阅读器弹窗 -->
+    <div id="pdfViewer">
+        <div class="pdf-container">
+            <div class="pdf-header">
+                <h3 id="pdfTitle">PDF文档</h3>
+                <button onclick="closePdfViewer()">关闭</button>
+            </div>
+            <iframe id="pdfFrame" src=""></iframe>
+        </div>
+    </div>
+    
+    <!-- 漫画查看器弹窗HTML结构（没这个，点击后没地方显示） -->
+    <div id="comicViewer" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center;">
+        <div style="width: 100%; padding: 20px; display: flex; justify-content: space-between; align-items: center; position: absolute; top: 0; left: 0;">
+            <h3 id="comicTitle" style="color: white; margin: 0;">漫画标题</h3>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <span id="comicPageInfo" style="color: white; font-size: 14px;">第 1 页 / 共 X 页</span>
+                <button onclick="closeComicViewer()" style="background: #ff5252; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">关闭</button>
+            </div>
+        </div>
+        <!-- 翻页按钮 -->
+        <button onclick="prevComicPage()" style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); border: none; width: 50px; height: 80px; color: white; font-size: 24px; cursor: pointer; border-radius: 4px;">←</button>
+        <img id="comicImage" src="" alt="漫画页面" style="max-width: 90%; max-height: 85vh; object-contain; border-radius: 8px;">
+        <button onclick="nextComicPage()" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); border: none; width: 50px; height: 80px; color: white; font-size: 24px; cursor: pointer; border-radius: 4px;">→</button>
+    </div>
+
+    <!-- 联系方式 -->
+    <div class="contact-section">
+        <div class="contact-item">
+            <img src="images/email.png" alt="邮箱图标">
+            <span>piconrin@foxmail.com</span>
+        </div>
+        <div class="contact-item">
+            <img src="images/lofter.png" alt="Lofter图标">
+            <span>@picONRin</span>
+        </div>
+        <div class="contact-item">
+            <img src="images/TwitterX.png" alt="X图标">
+            <span>@picOFFee</span>
+        </div>
+        <div class="contact-item">
+            <img src="images/weibo.png" alt="微博图标">
+            <span>@picONRin</span>
+        </div>
+        <div class="contact-item">
+            <img src="images/bilibili.png" alt="B站图标">
+            <span>@picONRin</span>
+        </div>
+    </div>
+
+    <!-- 功能脚本（修改后：增加图片翻页逻辑） -->
+    <script>
+        // 全局变量：存储所有画作信息、当前预览索引
+        let allPaintings = [];
+        let currentPreviewIndex = 0;
+
+        // 页面加载完成后，收集所有画作信息
+        window.addEventListener('DOMContentLoaded', function() {
+            // 获取所有画作项
+            const paintingItems = document.querySelectorAll('.gallery-item');
+            // 遍历并存储每个画作的src、标题、描述
+            paintingItems.forEach(item => {
+                const img = item.querySelector('img');
+                const caption = item.querySelector('.caption').textContent;
+                const desc = item.querySelector('div:not(.caption)').textContent;
+                allPaintings.push({
+                    src: img.src,
+                    caption: caption,
+                    desc: desc
+                });
+            });
+        });
+
+        // 语模块展开/收起功能
+       function toggleYuContent() {
+           const yuContent = document.getElementById('yuContent');
+           yuContent.style.display = yuContent.style.display === 'none' || yuContent.style.display === '' 
+               ? 'block' : 'none';
+       }
+
+       // 汉模块展开/收起功能
+       function toggleShiContent() {
+           const shiContent = document.getElementById('shiContent');
+           shiContent.style.display = shiContent.style.display === 'none' || shiContent.style.display === '' 
+               ? 'grid' : 'none';
+       }
+
+       // 下载功能
+       function downloadCheckSystem() {
+           document.getElementById('downloadModal').style.display = 'flex';
+           document.body.style.overflow = 'hidden';
+       }
+
+       function confirmDownload() {
+           // 请将ZIP文件放在网站目录下的"语/"文件夹中
+           const downloadUrl = '语/查重系统终版.zip';
+    
+           const link = document.createElement('a');
+           link.href = downloadUrl;
+           link.download = '查重系统终版.zip';
+           document.body.appendChild(link);
+           link.click();
+           document.body.removeChild(link);
+    
+           closeDownloadModal();
+    
+           setTimeout(() => {
+               alert('下载完成！请检查您的下载文件夹。\n文件保存为: 查重系统终版.zip');
+           }, 1000);
+       }
+
+       function closeDownloadModal() {
+           document.getElementById('downloadModal').style.display = 'none';
+           document.body.style.overflow = '';
+       }
+       
+       // 阅读奖励系统下载功能
+       function downloadReadingRewardSystem() {
+           // 弹出下载提示弹窗
+           const modal = document.createElement('div');
+           modal.id = 'readingRewardModal';
+           modal.style.cssText = `
+               display: flex;
+               position: fixed;
+               top: 0;
+               left: 0;
+               width: 100%;
+               height: 100%;
+               background: rgba(0,0,0,0.7);
+               z-index: 1000;
+               justify-content: center;
+               align-items: center;
+           `;
+           modal.innerHTML = `
+               <div style="background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 400px;">
+                   <h3 style="color: #333; margin-bottom: 15px;">下载提示</h3>
+                   <p style="color: #666; margin-bottom: 20px; line-height: 1.5;">
+                       您即将下载【阅读奖励系统】1.1.0<br>
+                       文件大小: 约3.04 MB<br>
+                       详细功能请查看压缩包内的 readme.txt
+                   </p>
+                   <div style="display: flex; gap: 15px; justify-content: center;">
+                       <button onclick="confirmReadingRewardDownload()" 
+                               style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                           确认下载
+                       </button>
+                       <button onclick="closeReadingRewardModal()" 
+                               style="background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                           取消
+                       </button>
+                   </div>
+               </div>
+           `;
+           document.body.appendChild(modal);
+           document.body.style.overflow = 'hidden';
+       }
+
+       // 确认下载阅读奖励系统
+       function confirmReadingRewardDownload() {
+           // 请将ZIP文件放在网站目录下的"语/"文件夹中
+           const downloadUrl = '语/reading_reward_system_1.1.0.zip';
+    
+           const link = document.createElement('a');
+           link.href = downloadUrl;
+           link.download = 'reading_reward_system_1.1.0.zip';
+           document.body.appendChild(link);
+           link.click();
+           document.body.removeChild(link);
+    
+           closeReadingRewardModal();
+    
+           setTimeout(() => {
+               alert('下载完成！请检查您的下载文件夹。\n文件保存为: reading_reward_system_1.1.0.zip\n详细功能请查看压缩包内的 readme.txt');
+           }, 1000);
+       }
+
+       // 关闭阅读奖励系统下载弹窗
+       function closeReadingRewardModal() {
+           const modal = document.getElementById('readingRewardModal');
+           if (modal) {
+               modal.remove();
+               document.body.style.overflow = '';
+           }
+       }
+ 
+        // 画模块展开/收起功能（原逻辑保留）
+        function toggleGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.style.display = gallery.style.display === 'none' || gallery.style.display === '' 
+                ? 'grid'  // 切换为grid显示
+                : 'none';
+        }
+
+        // 显示预览（修改后：接收当前画作项，定位索引）
+        function showPreview(src, currentItem) {
+            const overlay = document.getElementById('previewOverlay');
+            const fullImg = document.getElementById('fullImage');
+            const imageInfo = document.getElementById('imageInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            // 找到当前画作在allPaintings中的索引
+            const imgSrc = src;
+            currentPreviewIndex = allPaintings.findIndex(p => p.src === imgSrc);
+
+            // 更新预览内容
+            fullImg.src = imgSrc;
+            imageInfo.innerHTML = `${allPaintings[currentPreviewIndex].caption}<br>${allPaintings[currentPreviewIndex].desc}`;
+
+            // 控制翻页按钮显示（只有1张图时隐藏按钮）
+            prevBtn.style.display = allPaintings.length > 1 ? 'block' : 'none';
+            nextBtn.style.display = allPaintings.length > 1 ? 'block' : 'none';
+
+            // 显示预览层，禁止页面滚动
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 显示上一张图片
+        function showPrevImage() {
+            if (currentPreviewIndex > 0) {
+                currentPreviewIndex--;
+                updatePreviewContent();
+            }
+        }
+
+        // 显示下一张图片
+        function showNextImage() {
+            if (currentPreviewIndex < allPaintings.length - 1) {
+                currentPreviewIndex++;
+                updatePreviewContent();
+            }
+        }
+
+        // 更新预览层内容（图片、信息）
+        function updatePreviewContent() {
+            const fullImg = document.getElementById('fullImage');
+            const imageInfo = document.getElementById('imageInfo');
+            fullImg.src = allPaintings[currentPreviewIndex].src;
+            imageInfo.innerHTML = `${allPaintings[currentPreviewIndex].caption}<br>${allPaintings[currentPreviewIndex].desc}`;
+        }
+
+        // 关闭预览（原逻辑保留，恢复页面滚动）
+        function closePreview() {
+            const overlay = document.getElementById('previewOverlay');
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // PDF查看器功能（原逻辑保留）
+        function openPdfReader(pdfPath, title) {
+            const pdfViewer = document.getElementById('pdfViewer');
+            const pdfFrame = document.getElementById('pdfFrame');
+            const pdfTitle = document.getElementById('pdfTitle');
+            
+            pdfFrame.src = pdfPath;
+            pdfTitle.textContent = title;
+            pdfViewer.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePdfViewer() {
+            const pdfViewer = document.getElementById('pdfViewer');
+            pdfViewer.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        // ========== 统一的键盘控制（所有功能共用） ==========
+        document.addEventListener('keydown', function(e) {
+            // 1. 优先处理漫画查看器的键盘操作
+            const comicViewer = document.getElementById('comicViewer');
+            if (comicViewer.style.display === 'flex') {
+                switch (e.key) {
+                    case 'ArrowLeft': prevComicPage(); e.preventDefault(); break;
+                    case 'ArrowRight': nextComicPage(); e.preventDefault(); break;
+                    case 'Escape': closeComicViewer(); break;
+                }
+                return; // 漫画打开时，只处理漫画的键盘操作
+            }
+
+            // 2. 处理图片预览的键盘操作
+            const previewOverlay = document.getElementById('previewOverlay');
+            if (previewOverlay.style.display === 'flex') {
+                switch(e.key) {
+                    case 'ArrowLeft': showPrevImage(); e.preventDefault(); break;
+                    case 'ArrowRight': showNextImage(); e.preventDefault(); break;
+                    case 'Escape': closePreview(); break;
+                }
+                return; // 预览打开时，只处理预览的键盘操作
+            }
+
+            // 3. 处理PDF查看器的ESC关闭
+            const pdfViewer = document.getElementById('pdfViewer');
+            if (pdfViewer.style.display === 'flex' && e.key === 'Escape') {
+                closePdfViewer();
+                return;
+            }
+
+            // 4. 处理下载弹窗的ESC关闭
+            const downloadModal = document.getElementById('downloadModal');
+            if (downloadModal.style.display === 'flex' && e.key === 'Escape') {
+                closeDownloadModal();
+                return;
+            }
+
+            // 5. 处理阅读奖励下载弹窗的ESC关闭
+            const readingRewardModal = document.getElementById('readingRewardModal');
+            if (readingRewardModal && e.key === 'Escape') {
+                closeReadingRewardModal();
+            }
+        });
+    </script>
+</body>
+</html>
