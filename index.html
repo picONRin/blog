@@ -791,20 +791,33 @@
                   </div>
           </div>
 
+<!-- 音模块（带2个PDF歌词翻译，无封面，按钮式入口） -->
+<div class="section" id="yin" onclick="toggleYinContent()">
+    <h2>音</h2>
+    <p>音频作品与歌词分享 (点击展开/收起)</p>
+    <!-- 歌词翻译PDF区域：修复默认折叠 + 调整按钮样式 -->
+    <div class="lyric-pdf-area" id="yinContent" style="display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;">
+        <!-- 时滞错觉：淡紫色渐变（低饱和、柔和） -->
+        <button onclick="openPdfReader('音/クロノスタシス.pdf', '时滞错觉')" 
+                style="width: 100%; max-width: 180px; padding: 12px 10px; background: linear-gradient(135deg, #e0d5f9 0%, #c8b6f2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+            <div style="font-weight: 600; margin-bottom: 4px;">时滞错觉</div>
+            <div style="font-size: 12px; opacity: 0.9;">歌词翻译 | 共4页</div>
+        </button>
+        <!-- 勿忘的歌：低饱和淡蓝色渐变（淡淡的、不刺眼） -->
+        <button onclick="openPdfReader('音/忘レナ唄.pdf', '勿忘的歌')" 
+                style="width: 100%; max-width: 180px; padding: 12px 10px; background: linear-gradient(135deg, #d5e8f8 0%, #b8d8f0 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+            <div style="font-weight: 600; margin-bottom: 4px;">勿忘的歌</div>
+            <div style="font-size: 12px; opacity: 0.9;">歌词翻译 | 共2页</div>
+        </button>
+    </div>
+</div>
 
-        <!-- 音模块 -->
-        <div class="section" id="yin">
-            <h2>音</h2>
-            <p>音频作品与歌词分享</p>
-        </div>
-
-<!-- 汉模块 -->
+<!-- 汉模块（已修复布局+标签错误，直接用） -->
 <div class="section" id="shi" onclick="toggleShiContent()">
     <h2>汉</h2>
     <p>汉化内容与心得展示 (点击展开/收起)</p>
     
     <div class="gallery" id="shiContent" style="display: none; margin-top: 15px;">
-        
         <!-- 1. 料理店轶事 -->
         <div class="gallery-item">
             <div style="width: 100%; max-width: 150px; aspect-ratio: 1/1.414; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); background: #f5f5f5;">
@@ -872,7 +885,7 @@
                      ])">
             </div>
             <div class="caption">汉化于: 2025-09-05</div>
-            <div>小短篇合集<br><span style="font-size: 11px; color: #777;">A5比例 · 45页 · 点击查看</span></div>
+            <div>小短篇合集<br><span style="font-size: 11px; color: #777;">B5比例 · 45页 · 点击查看</span></div>
         </div>
         
         <!-- 3. （2020）昨晚过得很愉快吧 -->
@@ -911,7 +924,7 @@
                      ])">
             </div>
             <div class="caption">汉化于: 2025-09-19</div>
-            <div>昨晚过得很愉快吧？<br><span style="font-size: 11px; color: #777;">A5比例 · 26页 · 点击查看</span></div>
+            <div>昨晚过得很愉快吧？<br><span style="font-size: 11px; color: #777;">B5比例 · 26页 · 点击查看</span></div>
         </div>
 
         <!-- 4. 幽谷龙胆 -->
@@ -925,9 +938,47 @@
             <div class="caption">汉化于: 2026-01-30</div>
             <div>幽谷龙胆<br><span style="font-size: 11px; color: #777;">120页 · 点击封面查看</span></div>
         </div>
+
+        <!-- 5. 雪封之咒 -->
+        <div class="gallery-item">
+            <div style="width: 100%; max-width: 150px; aspect-ratio: 1/1.414; overflow: hidden; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); background: #f5f5f5;">
+                <img src="汉/（2019）雪封之咒/1.jpg"
+                     alt="（2019）雪封之咒 封面" 
+                     style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; cursor: pointer;"
+                     onclick="openComicViewer('（2019）雪封之咒', [
+                             '汉/（2019）雪封之咒/1.jpg',
+                             '汉/（2019）雪封之咒/2.png',
+                             '汉/（2019）雪封之咒/3.png',
+                             '汉/（2019）雪封之咒/4.jpg',
+                             '汉/（2019）雪封之咒/5.png',
+                             '汉/（2019）雪封之咒/6.png',
+                             '汉/（2019）雪封之咒/7.png',
+                             '汉/（2019）雪封之咒/8.png',
+                             '汉/（2019）雪封之咒/9.png',
+                             '汉/（2019）雪封之咒/10.png',
+                             '汉/（2019）雪封之咒/11.png',
+                             '汉/（2019）雪封之咒/12.png',
+                             '汉/（2019）雪封之咒/13.png',
+                             '汉/（2019）雪封之咒/14.png',
+                             '汉/（2019）雪封之咒/15.png',
+                             '汉/（2019）雪封之咒/16.png',
+                             '汉/（2019）雪封之咒/17.png',
+                             '汉/（2019）雪封之咒/18.png',
+                             '汉/（2019）雪封之咒/19.png',
+                             '汉/（2019）雪封之咒/20.png',
+                             '汉/（2019）雪封之咒/21.png',
+                             '汉/（2019）雪封之咒/22.png',
+                             '汉/（2019）雪封之咒/23.png',
+                             '汉/（2019）雪封之咒/24.png',
+                             '汉/（2019）雪封之咒/25.png',
+                             '汉/（2019）雪封之咒/26.jpg'
+                         ])">
+                </div>
+                <div class="caption">汉化于: 2026-01-31</div>
+                <div>雪封之咒<br><span style="font-size: 11px; color: #777;">A5比例 · 26页 · 点击查看</span></div>
+            </div>
     </div>
 </div>
-
 <!-- 补充：漫画查看器核心函数（含预加载，完整无重复） -->
 <script>
 // 1. 漫画查看器全局变量（统一定义，无重复）
@@ -1158,6 +1209,12 @@ function updateComicPage() {
            yuContent.style.display = yuContent.style.display === 'none' || yuContent.style.display === '' 
                ? 'block' : 'none';
        }
+       
+       // 音模块展开/收起功能
+       function toggleYinContent() {
+              const yinContent = document.getElementById('yinContent');
+              yinContent.style.display = yinContent.style.display === 'none' || yinContent.style.display === '' ? 'flex' : 'none';
+         }
 
        // 汉模块展开/收起功能
        function toggleShiContent() {
